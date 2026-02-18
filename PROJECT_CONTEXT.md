@@ -347,11 +347,54 @@ cd backend
 
 ---
 
-## Next Steps (Suggested)
+## Next Milestone: Milestone 4 — Waste & Expiry Engine
 
-1. **Milestone 4:** User authentication (JWT or session-based)
-2. **Milestone 5:** User-created recipes with CRUD
-3. **Milestone 6:** Receipt OCR (image upload with Tesseract or cloud API)
+**Goal:** Reduce food waste by highlighting items that should be used soon.
+
+### Backend Tasks
+
+1. **Expiry Rules**
+   - Category-based heuristics (e.g., dairy expires faster than canned goods)
+   - Default expiry days by category if user doesn't set expiry_date
+
+2. **Waste Risk Score**
+   - Calculate risk score for each pantry item
+   - Formula example: `risk = (1 / days_remaining) * quantity_factor`
+   - Higher score = more urgent to use
+
+3. **Endpoint: `GET /waste/use-first`**
+   - Returns pantry items sorted by waste risk (highest first)
+   - Include risk score, days remaining, suggested actions
+
+4. **Integrate with Meal Planner**
+   - Prioritize recipes that use high-risk items
+   - Add `prioritize_expiring` option to plan generation
+
+### Frontend Tasks
+
+1. **Waste Panel Component**
+   - "Use First" list showing high-risk items
+   - Risk color indicators (red/orange/yellow/green)
+   - Suggested recipes using those items
+
+2. **Expiry Warnings in Pantry Table**
+   - Visual indicators for items expiring soon
+   - Color-coded badges based on risk level
+
+3. **Waste Dashboard Page (or section)**
+   - Summary of items at risk
+   - Quick actions (mark as used, update expiry)
+
+### Deliverable
+System highlights items that should be used soon, helping reduce food waste.
+
+---
+
+## Future Milestones (Suggested)
+
+1. **Milestone 5:** User authentication (JWT or session-based)
+2. **Milestone 6:** User-created recipes with CRUD
+3. **Milestone 7:** Receipt OCR (image upload with Tesseract or cloud API)
 4. **Tech debt:** Add README, `.env.example`, PostgreSQL migration
 
 ---
