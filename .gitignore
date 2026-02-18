@@ -86,6 +86,7 @@ yarn-error.log*
 # ----- Build outputs -----
 /frontend/build/
 /frontend/dist/
+*.tsbuildinfo
 
 # ----- Alembic -----
 # Keep migrations in git, but ignore auto-generated temp files
