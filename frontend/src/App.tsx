@@ -6,10 +6,11 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { Package, UtensilsCrossed, Receipt, BarChart3 } from 'lucide-react'
 import PantryPage from './pages/PantryPage'
+import PlanPage from './pages/PlanPage'
 
 const navItems = [
   { path: '/', label: 'Pantry', icon: Package },
-  { path: '/meals', label: 'Meals', icon: UtensilsCrossed, disabled: true },
+  { path: '/plan', label: 'Meal Plan', icon: UtensilsCrossed },
   { path: '/receipts', label: 'Receipts', icon: Receipt, disabled: true },
   { path: '/analytics', label: 'Analytics', icon: BarChart3, disabled: true },
 ]
@@ -85,7 +86,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<PantryPage />} />
-        <Route path="/meals" element={<ComingSoon title="Meal Planner" />} />
+        <Route path="/plan" element={<PlanPage />} />
         <Route path="/receipts" element={<ComingSoon title="Receipt Scanner" />} />
         <Route path="/analytics" element={<ComingSoon title="Budget Analytics" />} />
       </Routes>

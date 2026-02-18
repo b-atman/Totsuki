@@ -13,8 +13,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.database import create_tables
-from app.api.routes import inventory_router
+from app.core.database import create_tables, AsyncSessionLocal
+from app.api.routes import inventory_router, planner_router
+from app.crud.recipe import get_recipe_count, seed_recipes
 
 
 @asynccontextmanager
@@ -38,6 +39,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await create_tables()
     print("Database tables created/verified")
     
+    # Seed recipes if database is empty
+    async with AsyncSessionLocal() as db:
+        recipe_count = await get_recipe_count(db)
+        if recipe_count == 0:
+            count = await seed_recipes(db)
+            await db.commit()
+            print(f"Seeded {count} recipes into database")
+        else:
+            print(f"Found {recipe_count} existing recipes")
+    
     yield  # App runs here
     
     # === SHUTDOWN ===
@@ -55,7 +66,7 @@ app = FastAPI(
     
     Features:
     - 📦 Pantry inventory management
-    - 🍽️ Meal planning (coming soon)
+    - 🍽️ Meal planning with personalized 7-day plans
     - 🧾 Receipt scanning (coming soon)
     - 📊 Budget analytics (coming soon)
     
@@ -90,6 +101,12 @@ app.add_middleware(
 # Include inventory routes under /api/v1 prefix
 app.include_router(
     inventory_router,
+    prefix=settings.API_V1_PREFIX,  # /api/v1
+)
+
+# Include meal planner routes under /api/v1 prefix
+app.include_router(
+    planner_router,
     prefix=settings.API_V1_PREFIX,  # /api/v1
 )
 
