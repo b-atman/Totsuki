@@ -4,7 +4,7 @@
 
 **Totsuki** is a grocery optimizer application that helps users manage their pantry inventory and generate personalized meal plans. The name appears to be inspired by the culinary school from the anime "Food Wars" (Shokugeki no Soma).
 
-**Current Status:** Milestone 2 Complete (Basic Meal Planner)
+**Current Status:** Milestone 3 Complete (Receipt Ingestion & Spending Analytics)
 
 ---
 
@@ -15,7 +15,9 @@ Totsuki aims to reduce food waste and simplify meal planning by:
 1. **Pantry Management** - Track what ingredients you have, their quantities, and expiration dates
 2. **Intelligent Meal Planning** - Generate 7-day meal plans based on user preferences (diet, budget, time constraints)
 3. **Shopping List Generation** - Automatically aggregate ingredients needed for meal plans
-4. **Future Goals** - Receipt scanning for automatic inventory updates, budget analytics
+4. **Receipt Ingestion** - Upload CSV receipts to auto-update pantry and track prices ✅ DONE
+5. **Spending Analytics** - View spending breakdown by category, store, and time ✅ DONE
+6. **Future Goals** - User authentication, user-created recipes
 
 ---
 
@@ -30,6 +32,7 @@ Totsuki aims to reduce food waste and simplify meal planning by:
 | Database | SQLite (dev) / PostgreSQL (prod-ready) | aiosqlite ≥0.19.0 |
 | Migrations | Alembic | ≥1.13.0 |
 | Validation | Pydantic + Pydantic Settings | ≥2.6.0 / ≥2.1.0 |
+| File Upload | python-multipart | ≥0.0.6 |
 | Utilities | python-dateutil, python-dotenv | - |
 
 ### Frontend
@@ -69,9 +72,11 @@ Pages (Logic) → Components (Presentation) → API Client → Backend
 
 ### Database Design Decisions
 - **JSON fields for ingredients/tags** - Flexibility over normalization (recipes have varying ingredient structures)
-- **`canonical_name` field on PantryItem** - Enables future receipt scanning to match OCR text to items
+- **`canonical_name` field on PantryItem** - Enables receipt matching (e.g., "2% MILK" → "milk")
+- **`ReceiptItem` for price history** - Stores every receipt line item permanently for analytics
+- **`receipt_batch_id`** - Groups items from same upload for viewing/deleting entire receipts
 - **Default `user_id = 1`** - Multi-user schema ready, but auth deferred to later milestone
-- **Indexes on `(user_id, category)` and `expiry_date`** - Optimizes common query patterns
+- **Indexes on analytics queries** - Optimized for spend-by-category, spend-by-store, spend-by-month
 
 ---
 
@@ -80,31 +85,38 @@ Pages (Logic) → Components (Presentation) → API Client → Backend
 ```
 Totsuki/
 ├── backend/
-│   ├── alembic/                 # Database migrations
+│   ├── alembic/                 # Database migrations (ACTIVE)
 │   │   ├── versions/            # Migration scripts
+│   │   │   ├── 133321c4ec16_initial_schema.py
+│   │   │   └── aea5fadf0609_add_receipt_items_table.py
 │   │   └── env.py               # Async SQLAlchemy config
 │   ├── alembic.ini              # Alembic configuration
 │   ├── app/
 │   │   ├── api/routes/          # FastAPI endpoint definitions
 │   │   │   ├── inventory.py     # Pantry CRUD endpoints
-│   │   │   └── planner.py       # Meal plan generation endpoints
+│   │   │   ├── planner.py       # Meal plan generation endpoints
+│   │   │   └── receipt.py       # Receipt ingestion & analytics endpoints
 │   │   ├── core/
 │   │   │   ├── config.py        # Pydantic Settings (env vars)
 │   │   │   └── database.py      # SQLAlchemy async engine setup
 │   │   ├── crud/                # Data access layer
 │   │   │   ├── pantry.py
-│   │   │   └── recipe.py
+│   │   │   ├── recipe.py
+│   │   │   └── receipt.py       # Receipt CRUD + analytics queries
 │   │   ├── models/              # SQLAlchemy ORM models
 │   │   │   ├── pantry.py
-│   │   │   └── recipe.py
+│   │   │   ├── recipe.py
+│   │   │   └── receipt.py       # ReceiptItem model
 │   │   ├── schemas/             # Pydantic request/response schemas
 │   │   │   ├── pantry.py
 │   │   │   ├── recipe.py
-│   │   │   └── planner.py
+│   │   │   ├── planner.py
+│   │   │   └── receipt.py       # CSV upload, preview, analytics schemas
 │   │   ├── services/            # Business logic
-│   │   │   └── planner.py       # Meal plan generation algorithm
+│   │   │   ├── planner.py       # Meal plan generation algorithm
+│   │   │   └── receipt.py       # CSV parsing, category inference, pantry matching
 │   │   ├── utils/               # Utility functions
-│   │   │   └── normalize.py     # Receipt name normalization
+│   │   │   └── normalize.py     # Receipt name normalization (brand removal, abbreviation expansion)
 │   │   ├── data/
 │   │   │   └── recipes_seed.json
 │   │   └── main.py              # FastAPI app entry point
@@ -114,18 +126,24 @@ Totsuki/
 │   ├── src/
 │   │   ├── api/                 # API client functions
 │   │   │   ├── pantry.ts
-│   │   │   └── planner.ts
+│   │   │   ├── planner.ts
+│   │   │   └── receipt.ts       # Receipt upload & analytics API
 │   │   ├── components/          # Reusable UI components
 │   │   │   ├── AddItemModal.tsx
 │   │   │   ├── EditItemModal.tsx
 │   │   │   ├── ExpiryBadge.tsx
-│   │   │   └── PantryTable.tsx
+│   │   │   ├── PantryTable.tsx
+│   │   │   ├── ReceiptUploadForm.tsx   # Drag & drop CSV upload
+│   │   │   ├── ReceiptPreviewTable.tsx # Parsed items review
+│   │   │   └── SpendSummary.tsx        # Analytics dashboard with charts
 │   │   ├── pages/               # Route-level pages
 │   │   │   ├── PantryPage.tsx
-│   │   │   └── PlanPage.tsx
+│   │   │   ├── PlanPage.tsx
+│   │   │   └── ReceiptPage.tsx  # Upload, analytics, history tabs
 │   │   ├── types/               # TypeScript type definitions
 │   │   │   ├── pantry.ts
-│   │   │   └── planner.ts
+│   │   │   ├── planner.ts
+│   │   │   └── receipt.ts       # Receipt & analytics types
 │   │   ├── App.tsx              # Main app + routing
 │   │   ├── main.tsx             # React entry point
 │   │   └── index.css            # Tailwind imports
@@ -146,6 +164,38 @@ Totsuki/
 | `93a639b` | Milestone 1A | Database schema + Pantry CRUD API complete |
 | `740aa7a` | Milestone 1A Frontend | Pantry Dashboard UI (table, modals, expiry badges) |
 | `b0f6183` | Milestone 2 | 7-day meal planner with filtering, scoring, shopping list |
+| `7007e1f` | Pre-Milestone 3 | Alembic migrations + name normalization utility |
+| `941aa40` | Milestone 3 | Receipt ingestion with CSV upload and spending analytics |
+
+---
+
+## API Endpoints
+
+### Pantry (`/api/v1/inventory`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/inventory` | List all pantry items |
+| POST | `/inventory/item` | Add new item |
+| PUT | `/inventory/item/{id}` | Update item |
+| DELETE | `/inventory/item/{id}` | Delete item |
+| POST | `/inventory/consume` | Consume quantity |
+
+### Meal Planner (`/api/v1/plan`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/plan/generate` | Generate 7-day meal plan |
+| GET | `/plan/cuisines` | List available cuisines |
+| GET | `/plan/diets` | List available diets |
+
+### Receipts (`/api/v1`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/ingest-receipt` | Upload CSV, get preview |
+| POST | `/ingest-receipt/confirm` | Confirm receipt, update pantry |
+| GET | `/analytics/spend-breakdown` | Get spending analytics |
+| GET | `/receipts` | List recent receipts |
+| GET | `/receipts/{batch_id}` | Get receipt details |
+| DELETE | `/receipts/{batch_id}` | Delete receipt batch |
 
 ---
 
@@ -198,6 +248,7 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
 | Singleton | `config.settings` | Single source of configuration |
 | Factory | `AsyncSessionLocal` | Create database sessions |
 | Strategy | `services/planner.py` | Filtering/scoring strategies for meal planning |
+| Pipeline | `services/receipt.py` | CSV parse → normalize → match → categorize |
 
 ### Frontend
 | Pattern | Where Used | Purpose |
@@ -206,6 +257,7 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
 | API Client | `api/*.ts` | Centralized HTTP logic |
 | Container/Presentational | Pages vs Components | Separate logic from presentation |
 | Type Mirroring | `types/*.ts` | TypeScript types match Pydantic schemas |
+| State Machine | `ReceiptPage.tsx` | Upload → Preview → Confirm → Success flow |
 
 ---
 
@@ -217,6 +269,7 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
 4. **Vite dev proxy** - Frontend assumes backend runs on port 8000
 5. **7-day meal plans** - Hardcoded for simplicity; could be parameterized
 6. **No external API calls** - All data is local (no Spoonacular, Edamam, etc.)
+7. **CSV receipts only** - OCR/image upload is future work
 
 ---
 
@@ -228,7 +281,7 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
    - Trade-off: Harder to query "all recipes with chicken"
 
 2. **`canonical_name` on PantryItem**
-   - Prepared for receipt OCR matching (e.g., "2% MILK" → "milk")
+   - Prepared for receipt matching (e.g., "2% MILK" → "milk")
    - Enables fuzzy matching without modifying display name
 
 3. **Async everything**
@@ -246,10 +299,21 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
    - Soft preferences (cuisine, protein) score next
    - Variety promotion prevents repetitive plans
 
-6. **No external recipe APIs**
-   - Keeps MVP simple and free of API keys
-   - Seed data demonstrates full flow
-   - User recipe creation is cleaner than API integration
+6. **ReceiptItem as price history**
+   - Every receipt line item stored permanently
+   - Enables spend analytics without separate price history table
+   - `receipt_batch_id` groups items for viewing/deleting uploads
+
+7. **Name normalization pipeline**
+   - Strip brand names (whole word match to avoid "ee" in "cheese")
+   - Expand abbreviations (CHKN → chicken)
+   - Remove size descriptors (1GAL, 2LB)
+   - Infer category from keywords
+
+8. **CSS bar charts over external library**
+   - No chart library dependency for MVP
+   - Simple percentage-based bars work well
+   - Can upgrade to Recharts/Chart.js later if needed
 
 ---
 
@@ -273,15 +337,22 @@ npm run dev
 # App at http://localhost:5173
 ```
 
+### Database Migrations
+```bash
+cd backend
+.\venv\Scripts\alembic current    # Check current revision
+.\venv\Scripts\alembic upgrade head    # Apply all migrations
+.\venv\Scripts\alembic revision --autogenerate -m "description"    # Create new migration
+```
+
 ---
 
 ## Next Steps (Suggested)
 
-1. **Milestone 3:** User authentication (JWT or session-based)
-2. **Milestone 4:** User-created recipes with CRUD
-3. **Milestone 5:** Receipt scanning (OCR integration)
-4. **Milestone 6:** Budget tracking and analytics
-5. **Tech debt:** Alembic migrations, PostgreSQL migration, add README
+1. **Milestone 4:** User authentication (JWT or session-based)
+2. **Milestone 5:** User-created recipes with CRUD
+3. **Milestone 6:** Receipt OCR (image upload with Tesseract or cloud API)
+4. **Tech debt:** Add README, `.env.example`, PostgreSQL migration
 
 ---
 
@@ -326,4 +397,4 @@ These rules were established for AI pair-programming sessions:
 ---
 
 *Generated: February 18, 2026*
-*Updated: February 18, 2026 - Added Alembic migrations and name normalization utility*
+*Updated: February 18, 2026 - Milestone 3 Complete (Receipt Ingestion & Spending Analytics)*
