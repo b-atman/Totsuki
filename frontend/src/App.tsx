@@ -4,15 +4,15 @@
  */
 
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import { Package, UtensilsCrossed, Receipt, BarChart3 } from 'lucide-react'
+import { Package, UtensilsCrossed, Receipt } from 'lucide-react'
 import PantryPage from './pages/PantryPage'
 import PlanPage from './pages/PlanPage'
+import ReceiptPage from './pages/ReceiptPage'
 
 const navItems = [
   { path: '/', label: 'Pantry', icon: Package },
   { path: '/plan', label: 'Meal Plan', icon: UtensilsCrossed },
-  { path: '/receipts', label: 'Receipts', icon: Receipt, disabled: true },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3, disabled: true },
+  { path: '/receipts', label: 'Receipts', icon: Receipt },
 ]
 
 function Navbar() {
@@ -33,19 +33,6 @@ function Navbar() {
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
-              
-              if (item.disabled) {
-                return (
-                  <span
-                    key={item.path}
-                    className="flex items-center gap-2 px-3 py-2 text-gray-400 cursor-not-allowed"
-                    title="Coming soon"
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </span>
-                )
-              }
 
               return (
                 <Link
@@ -69,17 +56,6 @@ function Navbar() {
   )
 }
 
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-500">Coming in a future milestone!</p>
-      </div>
-    </div>
-  )
-}
-
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,8 +63,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<PantryPage />} />
         <Route path="/plan" element={<PlanPage />} />
-        <Route path="/receipts" element={<ComingSoon title="Receipt Scanner" />} />
-        <Route path="/analytics" element={<ComingSoon title="Budget Analytics" />} />
+        <Route path="/receipts" element={<ReceiptPage />} />
       </Routes>
     </div>
   )

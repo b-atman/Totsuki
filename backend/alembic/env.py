@@ -24,6 +24,7 @@ from app.core.config import settings
 # Import all models here - Alembic needs to see them for autogenerate
 from app.models.pantry import PantryItem  # noqa: F401
 from app.models.recipe import Recipe  # noqa: F401
+from app.models.receipt import ReceiptItem  # noqa: F401
 
 # Alembic Config object - provides access to .ini file values
 config = context.config

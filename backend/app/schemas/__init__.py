@@ -21,6 +21,20 @@ from app.schemas.planner import (
     PlanSummary,
     PlanResponse,
 )
+from app.schemas.receipt import (
+    ReceiptItemBase,
+    ReceiptItemCreate,
+    ReceiptItemResponse,
+    ReceiptItemPreview,
+    CSVUploadRequest,
+    CSVParseResponse,
+    ReceiptConfirmRequest,
+    ReceiptIngestionResponse,
+    SpendByCategory,
+    SpendByStore,
+    SpendByMonth,
+    SpendBreakdownResponse,
+)
 
 __all__ = [
     # Pantry schemas
@@ -42,4 +56,17 @@ __all__ = [
     "AggregatedIngredient",
     "PlanSummary",
     "PlanResponse",
+    # Receipt schemas
+    "ReceiptItemBase",
+    "ReceiptItemCreate",
+    "ReceiptItemResponse",
+    "ReceiptItemPreview",
+    "CSVUploadRequest",
+    "CSVParseResponse",
+    "ReceiptConfirmRequest",
+    "ReceiptIngestionResponse",
+    "SpendByCategory",
+    "SpendByStore",
+    "SpendByMonth",
+    "SpendBreakdownResponse",
 ]

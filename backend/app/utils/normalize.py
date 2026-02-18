@@ -17,11 +17,19 @@ from typing import Optional
 
 # Common brand names to strip from receipt items
 BRAND_NAMES = {
+    # Full brand names
     "great value", "kirkland", "signature select", "kroger", "safeway",
     "trader joes", "trader joe's", "whole foods", "365", "market pantry",
     "good gather", "simply balanced", "o organics", "open nature",
     "private selection", "simple truth", "essential everyday",
     "store brand", "generic", "house brand",
+    # Additional brands
+    "kraft", "heinz", "nestle", "kelloggs", "general mills", "campbells",
+    "del monte", "dole", "chiquita", "tyson", "perdue", "oscar mayer",
+    "land o lakes", "sargento", "tillamook", "cabot", "horizon",
+    "stonyfield", "chobani", "fage", "oikos", "yoplait", "dannon",
+    # Brand abbreviations commonly seen on receipts
+    "gv", "kk", "ss", "mp", "gg", "st", "ee",
 }
 
 # Common abbreviations found on receipts
@@ -150,9 +158,10 @@ def normalize_item_name(raw_name: str, keep_descriptors: bool = False) -> str:
     # Lowercase for consistent processing
     name = raw_name.lower().strip()
     
-    # Remove brand names
+    # Remove brand names (whole word match only)
     for brand in BRAND_NAMES:
-        name = name.replace(brand, " ")
+        # Use word boundary to avoid matching substrings (e.g., "ee" in "cheese")
+        name = re.sub(r"\b" + re.escape(brand) + r"\b", " ", name)
     
     # Remove size/quantity patterns
     for pattern in SIZE_PATTERNS:

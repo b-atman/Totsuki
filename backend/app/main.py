@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import create_tables, AsyncSessionLocal
-from app.api.routes import inventory_router, planner_router
+from app.api.routes import inventory_router, planner_router, receipt_router
 from app.crud.recipe import get_recipe_count, seed_recipes
 
 
@@ -67,8 +67,8 @@ app = FastAPI(
     Features:
     - 📦 Pantry inventory management
     - 🍽️ Meal planning with personalized 7-day plans
-    - 🧾 Receipt scanning (coming soon)
-    - 📊 Budget analytics (coming soon)
+    - 🧾 Receipt ingestion with CSV upload
+    - 📊 Spending analytics and breakdown
     
     Built with FastAPI, SQLAlchemy, and React.
     """,
@@ -107,6 +107,12 @@ app.include_router(
 # Include meal planner routes under /api/v1 prefix
 app.include_router(
     planner_router,
+    prefix=settings.API_V1_PREFIX,  # /api/v1
+)
+
+# Include receipt ingestion routes under /api/v1 prefix
+app.include_router(
+    receipt_router,
     prefix=settings.API_V1_PREFIX,  # /api/v1
 )
 
