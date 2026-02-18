@@ -80,6 +80,10 @@ Pages (Logic) → Components (Presentation) → API Client → Backend
 ```
 Totsuki/
 ├── backend/
+│   ├── alembic/                 # Database migrations
+│   │   ├── versions/            # Migration scripts
+│   │   └── env.py               # Async SQLAlchemy config
+│   ├── alembic.ini              # Alembic configuration
 │   ├── app/
 │   │   ├── api/routes/          # FastAPI endpoint definitions
 │   │   │   ├── inventory.py     # Pantry CRUD endpoints
@@ -99,6 +103,8 @@ Totsuki/
 │   │   │   └── planner.py
 │   │   ├── services/            # Business logic
 │   │   │   └── planner.py       # Meal plan generation algorithm
+│   │   ├── utils/               # Utility functions
+│   │   │   └── normalize.py     # Receipt name normalization
 │   │   ├── data/
 │   │   │   └── recipes_seed.json
 │   │   └── main.py              # FastAPI app entry point
@@ -149,7 +155,6 @@ Totsuki/
 |-------|----------|-------|
 | **No authentication** | Medium | `user_id = 1` hardcoded; schema supports multi-user |
 | **SQLite in dev** | Low | PostgreSQL config exists, needs migration |
-| **Alembic not active** | Low | Tables created via SQLAlchemy; Alembic configured but not used |
 | **Recipe data read-only** | Low | Recipes are seeded, no CRUD endpoints for user recipes |
 | **No `.env.example`** | Low | Config uses defaults; new devs need to know env vars |
 | **No README** | Low | Documentation only in code comments |
@@ -321,3 +326,4 @@ These rules were established for AI pair-programming sessions:
 ---
 
 *Generated: February 18, 2026*
+*Updated: February 18, 2026 - Added Alembic migrations and name normalization utility*
